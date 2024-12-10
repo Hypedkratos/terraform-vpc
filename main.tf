@@ -71,19 +71,19 @@ resource "aws_security_group" "web_sg" {
   name   = "web_sg"
 
   ingress {
-    description      = "Allow HTTP traffic"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Allow HTTP traffic"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    description      = "Allow all outbound traffic"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
@@ -113,8 +113,8 @@ resource "aws_instance" "web_server" {
   ami           = "ami-0c02fb55956c7d316" # Replace with the latest Amazon Linux AMI ID for your region
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public.id
-  security_groups = [
-    aws_security_group.web_sg.name
+  vpc_security_group_ids = [
+    aws_security_group.web_sg.id
   ]
   key_name = aws_key_pair.deployer_key.key_name
 
@@ -123,7 +123,7 @@ resource "aws_instance" "web_server" {
               #!/bin/bash
               yum update -y
               yum install -y httpd
-              echo "<h1>Welcome to My Web Server</h1>" > /var/www/html/index.html
+              echo "<h1>Welcome to My Web Server created by Terraform</h1>" > /var/www/html/index.html
               systemctl start httpd
               systemctl enable httpd
               EOF
@@ -137,4 +137,3 @@ resource "aws_instance" "web_server" {
 output "web_server_public_ip" {
   value = aws_instance.web_server.public_ip
 }
-
