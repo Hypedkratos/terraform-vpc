@@ -1,0 +1,27 @@
+1. Command for initializing the project -->
+ 
+        terrform init
+
+2. Commmand for formatting the main.tf code -->
+
+        terraform fmt
+
+3. Command for validating our code --> 
+
+        terraform validate
+
+4. Command for checking plan --> 
+
+        terraform plan
+
+5. Command for applying valid plan --> 
+
+        terraform apply
+
+6. Command for showing result of applying --> 
+
+        terraform show 
+
+7. Command for removing the provisioned infrastructure --> 
+
+        terraform destroy
