@@ -36,6 +36,17 @@ resource "aws_subnet" "public" {
   }
 }
 
+# Creating a private subnet
+resource "aws_subnet" "private" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = false
+  availability_zone       = "us-east-1a" # Replace with your desired AZ
+  tags = {
+    Name = "PrivateSubnet"
+  }
+}
+
 # Creating an Internet Gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
@@ -44,25 +55,63 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-# Creating a route table
-resource "aws_route_table" "main" {
+# Creating a route table for the public subnet
+resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   tags = {
-    Name = "MainRouteTable"
+    Name = "PublicRouteTable"
   }
 }
 
-# Adding a route to the route table
+# Adding a route to the public route table
 resource "aws_route" "public_internet_access" {
-  route_table_id         = aws_route_table.main.id
+  route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.main.id
 }
 
-# Associating the subnet with the route table
+# Associating the public subnet with the public route table
 resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.main.id
+  route_table_id = aws_route_table.public.id
+}
+
+# Creating an Elastic IP for the NAT Gateway
+resource "aws_eip" "nat" {
+  vpc = true
+  tags = {
+    Name = "NatEIP"
+  }
+}
+
+# Creating a NAT Gateway
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
+  tags = {
+    Name = "NatGateway"
+  }
+}
+
+# Creating a route table for the private subnet
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+  tags = {
+    Name = "PrivateRouteTable"
+  }
+}
+
+# Adding a route to the private route table for internet access via the NAT Gateway
+resource "aws_route" "private_internet_access" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main.id
+}
+
+# Associating the private subnet with the private route table
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
 }
 
 # Creating a security group to allow HTTP access
@@ -108,7 +157,7 @@ resource "local_file" "private_key" {
   content  = tls_private_key.key.private_key_pem
 }
 
-# Creating an EC2 instance
+# Creating an EC2 instance in the public subnet
 resource "aws_instance" "web_server" {
   ami           = "ami-0c02fb55956c7d316" # Replace with the latest Amazon Linux AMI ID for your region
   instance_type = "t2.micro"
