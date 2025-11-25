@@ -1,15 +1,3 @@
-# Terraform configuration
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.16"
-    }
-  }
-
-  required_version = ">= 1.2.0"
-}
-
 # Define the provider (AWS)
 provider "aws" {
   region = "us-east-1"
